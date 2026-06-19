@@ -205,13 +205,12 @@ public final class ClientV2 {
      * @return all builds in the channel
      */
     public Build @NonNull [] getBuilds(@NonNull String channelId, boolean includeExperimental) {
-        List<Build> builds = new ArrayList<>();
+        final List<Build> builds = new ArrayList<>();
+        final String requestUrl = constructUrlRequest(Type.ALL_BUILDS, "project=" + getProject(),
+            new String[]{
+                channelId.isEmpty() ? "" : "channel=" + channelId, "experimental=" + includeExperimental});
         try {
-            JsonObject json = sendRequest(
-                constructUrlRequest(Type.ALL_BUILDS, "project=" + getProject(),
-                    new String[]{
-                        channelId.isEmpty() ? "" : "channel=" + channelId, "experimental=" + includeExperimental})
-            );
+            JsonObject json = sendRequest(requestUrl);
             for (final JsonElement element : json.getAsJsonArray("builds")) {
                 JsonObject build = element.getAsJsonObject();
                 Build parsed = parseBuild(build);
@@ -219,7 +218,7 @@ public final class ClientV2 {
                 builds.add(parsed);
             }
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Unable to fetch CanvasMC REST API", e);
+            throw new RuntimeException("Unable to fetch CanvasMC REST API from \"" + requestUrl + "\"", e);
         }
         return builds.toArray(new Build[0]);
     }
@@ -298,17 +297,16 @@ public final class ClientV2 {
      * @return the latest build
      */
     public @NonNull Build getLatestBuild(@NonNull String channelId, boolean allowExperimentalBuilds) {
+        final String requestUrl = constructUrlRequest(Type.LATEST, "project=" + getProject(),
+            new String[]{
+                channelId.isEmpty() ? "" : "channel=" + channelId, "experimental=" + allowExperimentalBuilds});
         try {
-            JsonObject json = sendRequest(
-                constructUrlRequest(Type.LATEST, "project=" + getProject(),
-                    new String[]{
-                        channelId.isEmpty() ? "" : "channel=" + channelId, "experimental=" + allowExperimentalBuilds})
-            );
+            JsonObject json = sendRequest(requestUrl);
             Build parsed = parseBuild(json);
             if (parsed == null) throw new RuntimeException("Couldn't find latest build");
             return parsed;
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Unable to fetch CanvasMC REST API", e);
+            throw new RuntimeException("Unable to fetch CanvasMC REST API from \"" + requestUrl + "\"", e);
         }
     }
 
